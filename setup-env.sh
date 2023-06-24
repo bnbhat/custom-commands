@@ -42,7 +42,7 @@ for file in "$custom_commands_dir/scripts"/*.sh; do
   filename_without_ext="${filename%.*}"
   dest_file="$custom_commands_dir/bin/$filename_without_ext"
 
-  if [ ! -f "$dest_file" ] ; then
+  if [ ! -f "$dest_file" ]; then
     if cp "$file" "$dest_file"; then
       chmod +x "$dest_file" # Add executable permission
       new_files+=("$filename_without_ext")
@@ -51,7 +51,17 @@ for file in "$custom_commands_dir/scripts"/*.sh; do
       exit 1
     fi
   elif [ "$file" -nt "$dest_file" ]; then
-    edited_files+=("$filename_without_ext")
+    source_modified_time=$(stat -c "%Y" "$file")
+    dest_modified_time=$(stat -c "%Y" "$dest_file")
+    if [ "$source_modified_time" -gt "$dest_modified_time" ]; then
+      if cp "$file" "$dest_file"; then
+        chmod +x "$dest_file" # Add executable permission
+        edited_files+=("$filename_without_ext")
+      else
+        echo -e "${RED}Error:${NC} Failed to copy or update $filename to the bin directory."
+        exit 1
+      fi
+    fi
   fi
 done
 
@@ -74,6 +84,30 @@ if [ ${#edited_files[@]} -gt 0 ]; then
   done
 else
   echo "No edited files found."
+fi
+echo
+
+# Delete files in the bin directory if the corresponding file is deleted in the scripts directory
+deleted_files=()
+for file in "$custom_commands_dir/bin"/*; do
+  filename=$(basename "$file")
+  filename_without_ext="${filename%.*}"
+  source_file="$custom_commands_dir/scripts/$filename.sh"
+
+  if [ ! -f "$source_file" ]; then
+    rm "$file"
+    deleted_files+=("$filename_without_ext")
+  fi
+done
+
+# Print the deleted files found
+if [ ${#deleted_files[@]} -gt 0 ]; then
+  echo -e "${RED}Deleted files:${NC}"
+  for file in "${deleted_files[@]}"; do
+    echo -e "${RED}$file${NC}"
+  done
+else
+  echo "No deleted files found."
 fi
 echo
 
