@@ -1,0 +1,1 @@
+systemctl is-active mongod | grep -q "inactive" && echo "staring mongod" && systemctl start mongod | echo "mongod started" || echo "mongod is already running"; cd ~/MongoDB ; npm start; bash;

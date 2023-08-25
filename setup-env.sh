@@ -21,14 +21,21 @@ if [ "$(basename "$custom_commands_dir")" != "custom-commands" ]; then
   exit 1
 fi
 
-# Create the bin directory if it doesn't exist
-if mkdir -p "$custom_commands_dir/bin"; then
-  echo "Successfully created the bin directory."
+# Check if the bin directory already exists
+if [ -d "$custom_commands_dir/bin" ]; then
+  echo "The bin directory is already present."
   echo
 else
-  echo -e "${RED}Error:${NC} Failed to create the bin directory."
-  exit 1
+  # Create the bin directory
+  if mkdir -p "$custom_commands_dir/bin"; then
+    echo "Successfully created the bin directory."
+    echo
+  else
+    echo "Failed to create the bin directory."
+    exit 1
+  fi
 fi
+
 
 # Store the list of new files found
 new_files=()
@@ -112,12 +119,12 @@ fi
 echo
 
 # Add the custom_commands/bin directory to the PATH if it's not already present
-if ! echo "$PATH" | grep -q "$custom_commands_dir/bin"; then
-  export PATH="$custom_commands_dir/bin:$PATH"
-  echo "Added the custom_commands/bin directory to the PATH."
-else
-  echo "The custom_commands/bin directory is already in the PATH."
-fi
+#if ! echo "$PATH" | grep -q "$custom_commands_dir/bin"; then
+#  export PATH="$custom_commands_dir/bin:$PATH"
+#  echo "Added the custom_commands/bin directory to the PATH."
+#else
+#  echo "The custom_commands/bin directory is already in the PATH."
+#fi
 
 # Source the .bashrc file
 if source ~/.bashrc; then
@@ -126,5 +133,3 @@ else
   echo -e "${RED}Error:${NC} Failed to source the .bashrc file."
   exit 1
 fi
-
-echo "Setup completed successfully!"
